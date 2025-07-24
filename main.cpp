@@ -24,26 +24,27 @@ public:
 	const int READ_ASSURANCE_COUNT = 5;
 };
 
+TEST_F(DDFixture, WriteToHWErasedArea) {
+
+	EXPECT_CALL(mockFlash, read).Times(1).WillRepeatedly(Return(ERASE_VALUE));
+	EXPECT_NO_THROW({ driver.write(ADDRESS, DATA); });
+}
+
 TEST_F(DDFixture, WriteToHWNonErasedArea) {
 
-	// when read returns with 0xFF value
 	EXPECT_CALL(mockFlash, read).Times(1).WillRepeatedly(Return(DATA));
-	// driver can write the value	
 	EXPECT_THROW({ driver.write(ADDRESS, DATA); }, WriteFailException);
 }
 
 TEST_F(DDFixture, FiveReadFromHWSuccess) {
 
-	EXPECT_CALL(mockFlash, read).Times(READ_ASSURANCE_COUNT).WillRepeatedly(Return(DATA));
-	unsigned char data = driver.read(ADDRESS);
-	
-	EXPECT_EQ(DATA, data);
+	EXPECT_CALL(mockFlash, read).Times(READ_ASSURANCE_COUNT).WillRepeatedly(Return(DATA));	
+	EXPECT_EQ(DATA, driver.read(ADDRESS));
 }
 
 TEST_F(DDFixture, FiveReadFromHWFail) {
 	const unsigned char UNEVEN_DATA = 0xAB;
 	EXPECT_CALL(mockFlash, read).WillOnce(Return(UNEVEN_DATA)).WillRepeatedly(Return(DATA));
-
 	EXPECT_THROW({ unsigned char data = driver.read(ADDRESS); }, ReadFailException);
 }
 
