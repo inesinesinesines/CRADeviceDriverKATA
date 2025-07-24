@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include "device_driver.h"
 #include "flash_memory_device.h"
+#include "Application.cpp"
 
 using namespace testing;
 
@@ -23,6 +24,8 @@ public:
 	const int ERASE_VALUE = 0xFF;
 	const int READ_ASSURANCE_COUNT = 5;
 };
+
+
 
 TEST_F(DDFixture, WriteToHWErasedArea) {
 
@@ -47,6 +50,44 @@ TEST_F(DDFixture, FiveReadFromHWFail) {
 	EXPECT_CALL(mockFlash, read).WillOnce(Return(UNEVEN_DATA)).WillRepeatedly(Return(DATA));
 	EXPECT_THROW({ unsigned char data = driver.read(ADDRESS); }, ReadFailException);
 }
+
+
+
+
+
+
+
+TEST(ApplicationTest, ReadPrint) {
+	FlashMock flashmock;
+	DeviceDriver dd{ &flashmock };
+	Application app(&dd);
+
+	EXPECT_CALL(flashmock, read).Times(25);
+
+	app.readAndPrint(0x0, 0x4);
+
+	// 프린트 검증 
+	// 1. 내부적으로 래퍼 클래스 반환 (proxy) 
+	// 2. console버퍼 옮겨서 확인
+	// 3. 행동 검증 
+
+}
+
+TEST(ApplicationTest, WriteAll) {
+	NiceMock<FlashMock> flashmock;
+	DeviceDriver dd{ &flashmock };
+	Application app(&dd);
+
+	EXPECT_CALL(flashmock, read).Times(5).WillRepeatedly(Return((unsigned char)0xff));
+
+	app.writeAll(0x0);
+
+	// 프린트 검증 
+	// 1. 내부적으로 래퍼 클래스 반환 (proxy) 
+	// 2. console버퍼 옮겨서 확인
+	// 3. 행동 검증 
+}
+
 
 
 int main() {
