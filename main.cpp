@@ -15,31 +15,37 @@ public:
 
 class DDFixture : public testing::Test {
 public: 
-	FlashMock mockFlash;
+	NiceMock<FlashMock> mockFlash;
 	DeviceDriver driver{ &mockFlash };
+
+	const int ADDRESS = 0x0;
+	const unsigned char DATA = 0xAA;
+	const int ERASE_VALUE = 0xFF;
+	const int READ_ASSURANCE_COUNT = 5;
 };
 
-TEST_F(DDFixture, WriteToHW) {
+TEST_F(DDFixture, WriteToHWErasedArea) {
 
-	int data = driver.read(0xFF);
-	EXPECT_EQ(0, data);
+	EXPECT_CALL(mockFlash, read).Times(1).WillRepeatedly(Return(ERASE_VALUE));
+	EXPECT_NO_THROW({ driver.write(ADDRESS, DATA); });
+}
+
+TEST_F(DDFixture, WriteToHWNonErasedArea) {
+
+	EXPECT_CALL(mockFlash, read).Times(1).WillRepeatedly(Return(DATA));
+	EXPECT_THROW({ driver.write(ADDRESS, DATA); }, WriteFailException);
 }
 
 TEST_F(DDFixture, FiveReadFromHWSuccess) {
 
-	unsigned char value = 0xAA;
-	EXPECT_CALL(mockFlash, read).Times(5).WillRepeatedly(Return(value));
-	unsigned char data = driver.read(0xFF);
-	
-	EXPECT_EQ(value, data);
+	EXPECT_CALL(mockFlash, read).Times(READ_ASSURANCE_COUNT).WillRepeatedly(Return(DATA));	
+	EXPECT_EQ(DATA, driver.read(ADDRESS));
 }
 
 TEST_F(DDFixture, FiveReadFromHWFail) {
-
-	unsigned char value = 0xAA;
-	EXPECT_CALL(mockFlash, read).Times(5).WillOnce(Return(0xAB)).WillRepeatedly(Return(value));
-
-	EXPECT_THROW({ unsigned char data = driver.read(0xFF); }, ReadFailException);
+	const unsigned char UNEVEN_DATA = 0xAB;
+	EXPECT_CALL(mockFlash, read).WillOnce(Return(UNEVEN_DATA)).WillRepeatedly(Return(DATA));
+	EXPECT_THROW({ unsigned char data = driver.read(ADDRESS); }, ReadFailException);
 }
 
 

@@ -5,13 +5,19 @@
 class ReadFailException : public std::exception {
     public:
 };
+class WriteFailException : public std::exception {
+    public:
+};
 
 class DeviceDriver
 {
 public:
     DeviceDriver(FlashMemoryDevice* hardware);
     int read(long address);
+    void checkReadPostCondition(long address, int readData);
     void write(long address, int data);
+
+    void checkWritePreCondition(long address);
 
 protected:
     FlashMemoryDevice* m_hardware;

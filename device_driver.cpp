@@ -9,17 +9,31 @@ DeviceDriver::DeviceDriver(FlashMemoryDevice* hardware) : m_hardware(hardware)
 
 int DeviceDriver::read(long address)
 {
-    std::set<int> data;
-    for (int i = 0; i < 5; i++) {
-        data.insert((int)(m_hardware->read(address)));
-    }
+    int readData = (int)(m_hardware->read(address));
+
+    checkReadPostCondition(address, readData);
     
-    if (data.size() > 1) throw ReadFailException();
-    return *data.begin();
+    return readData;
+}
+
+void DeviceDriver::checkReadPostCondition(long address, int readData)
+{
+    for (int i = 0; i < 4; i++) {
+        int testData = (int)(m_hardware->read(address));
+        if (readData != testData) throw ReadFailException();
+    }
 }
 
 void DeviceDriver::write(long address, int data)
 {
-    // TODO: implement this method
+    checkWritePreCondition(address);
     m_hardware->write(address, (unsigned char)data);
+}
+
+void DeviceDriver::checkWritePreCondition(long address)
+{
+    if (0xFF != m_hardware->read(address))
+    {
+        throw WriteFailException();
+    }
 }
