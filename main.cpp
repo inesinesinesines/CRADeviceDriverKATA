@@ -13,19 +13,19 @@ public:
 	MOCK_METHOD(void, write, (long address, unsigned char data), (override));
 };
 
-TEST(DeviceDriver, WriteToHW) {
-	// TODO : replace hardware with a Test Double
+class DDFixture : public testing::Test {
+public: 
 	FlashMock mockFlash;
-	FlashMemoryDevice* hardware = &mockFlash;
-	DeviceDriver driver{ hardware };
+	DeviceDriver driver{ &mockFlash };
+};
+
+TEST_F(DDFixture, WriteToHW) {
+
 	int data = driver.read(0xFF);
 	EXPECT_EQ(0, data);
 }
 
-TEST(DeviceDriver, FiveReadFromHWSuccess) {
-	FlashMock mockFlash;
-	FlashMemoryDevice* hardware = &mockFlash;
-	DeviceDriver driver{ hardware };
+TEST_F(DDFixture, FiveReadFromHWSuccess) {
 
 	unsigned char value = 0xAA;
 	EXPECT_CALL(mockFlash, read).Times(5).WillRepeatedly(Return(value));
@@ -34,10 +34,7 @@ TEST(DeviceDriver, FiveReadFromHWSuccess) {
 	EXPECT_EQ(value, data);
 }
 
-TEST(DeviceDriver, FiveReadFromHWFail) {
-	FlashMock mockFlash;
-	FlashMemoryDevice* hardware = &mockFlash;
-	DeviceDriver driver{ hardware };
+TEST_F(DDFixture, FiveReadFromHWFail) {
 
 	unsigned char value = 0xAA;
 	EXPECT_CALL(mockFlash, read).Times(5).WillOnce(Return(0xAB)).WillRepeatedly(Return(value));
