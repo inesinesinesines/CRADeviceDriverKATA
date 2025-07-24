@@ -5,6 +5,9 @@
 class ReadFailException : public std::exception {
     public:
 };
+class WriteFailException : public std::exception {
+    public:
+};
 
 class DeviceDriver
 {

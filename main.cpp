@@ -15,14 +15,28 @@ public:
 
 class DDFixture : public testing::Test {
 public: 
-	FlashMock mockFlash;
+	NiceMock<FlashMock> mockFlash;
 	DeviceDriver driver{ &mockFlash };
 };
 
-TEST_F(DDFixture, WriteToHW) {
+TEST_F(DDFixture, WriteToHWErasedArea) {
 
-	int data = driver.read(0xFF);
-	EXPECT_EQ(0, data);
+	long address = 0x0;
+	int data = 0xAA;
+	// read returns with 0xFF value
+	EXPECT_CALL(mockFlash, read).Times(1).WillRepeatedly(Return(0xFF));
+	// driver write the value	
+	EXPECT_NO_THROW({ driver.write(address, data); });
+}
+
+TEST_F(DDFixture, WriteToHWNonErasedArea) {
+
+	long address = 0x0;
+	int data = 0xAA;
+	// read returns with 0xFF value
+	EXPECT_CALL(mockFlash, read).Times(1).WillRepeatedly(Return(0xAA));
+	// driver write the value	
+	EXPECT_THROW({ driver.write(address, data); }, WriteFailException);
 }
 
 TEST_F(DDFixture, FiveReadFromHWSuccess) {
